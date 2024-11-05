@@ -21,7 +21,7 @@ final class CardController extends AbstractController
     {
         $cards = $cardRepository->findAll();
         $data = $serializer->serialize($cards, 'json');
-
+        $coucou = 4;
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 
