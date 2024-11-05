@@ -13,6 +13,7 @@ class SecurityController extends AbstractController
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
     public function login(AuthenticationUtils $authenticationUtils): JsonResponse
     {
+        dd("la");
         // Cette méthode est appelée automatiquement par LexikJWTAuthenticationBundle pour gérer la génération du token JWT
         $error = $authenticationUtils->getLastAuthenticationError();
         
