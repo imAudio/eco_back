@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hand{% endblock %}
+
+{% block body %}
+    <h1>Hand</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ hand.id }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_hand_index') }}">back to list</a>
+
+    <a href="{{ path('app_hand_edit', {'id': hand.id}) }}">edit</a>
+
+    {{ include('hand/_delete_form.html.twig') }}
+{% endblock %}
