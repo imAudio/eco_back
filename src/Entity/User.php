@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -31,6 +33,34 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+    // Champ temporaire pour le mot de passe en clair
+    private ?string $plainPassword = null;
+
+    /**
+     * @var Collection<int, Party>
+     */
+    #[ORM\OneToMany(targetEntity: Party::class, mappedBy: 'winner')]
+    private Collection $parties;
+
+    /**
+     * @var Collection<int, Player>
+     */
+    #[ORM\OneToMany(targetEntity: Player::class, mappedBy: 'user')]
+    private Collection $players;
+
+    /**
+     * @var Collection<int, Friend>
+     */
+    #[ORM\OneToMany(targetEntity: Friend::class, mappedBy: 'sent')]
+    private Collection $friends;
+
+    public function __construct()
+    {
+        $this->parties = new ArrayCollection();
+        $this->players = new ArrayCollection();
+        $this->friends = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -48,33 +78,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
     }
 
-    /**
-     * @see UserInterface
-     *
-     * @return list<string>
-     */
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
     }
 
-    /**
-     * @param list<string> $roles
-     */
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
@@ -82,9 +98,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
     public function getPassword(): ?string
     {
         return $this->password;
@@ -97,12 +110,108 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @see UserInterface
-     */
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword(?string $plainPassword): void
+    {
+        $this->plainPassword = $plainPassword;
+    }
+
     public function eraseCredentials(): void
     {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
+        $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection<int, Party>
+     */
+    public function getParties(): Collection
+    {
+        return $this->parties;
+    }
+
+    public function addParty(Party $party): static
+    {
+        if (!$this->parties->contains($party)) {
+            $this->parties->add($party);
+            $party->setWinner($this);
+        }
+
+        return $this;
+    }
+
+    public function removeParty(Party $party): static
+    {
+        if ($this->parties->removeElement($party)) {
+            // set the owning side to null (unless already changed)
+            if ($party->getWinner() === $this) {
+                $party->setWinner(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Player>
+     */
+    public function getPlayers(): Collection
+    {
+        return $this->players;
+    }
+
+    public function addPlayer(Player $player): static
+    {
+        if (!$this->players->contains($player)) {
+            $this->players->add($player);
+            $player->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlayer(Player $player): static
+    {
+        if ($this->players->removeElement($player)) {
+            // set the owning side to null (unless already changed)
+            if ($player->getUser() === $this) {
+                $player->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Friend>
+     */
+    public function getFriends(): Collection
+    {
+        return $this->friends;
+    }
+
+    public function addFriend(Friend $friend): static
+    {
+        if (!$this->friends->contains($friend)) {
+            $this->friends->add($friend);
+            $friend->setSent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFriend(Friend $friend): static
+    {
+        if ($this->friends->removeElement($friend)) {
+            // set the owning side to null (unless already changed)
+            if ($friend->getSent() === $this) {
+                $friend->setSent(null);
+            }
+        }
+
+        return $this;
     }
 }
