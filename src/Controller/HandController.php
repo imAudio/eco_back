@@ -10,26 +10,48 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 #[Route('api/hand')]
 final class HandController extends AbstractController
 {
     #[Route('',name:'app_hand_index', methods: ['GET'])]
-    public function index(HandRepository $handRepository ,SerializerInterface $serializer): JsonResponse
-    
-        {$hands = $handRepository->findAll();
-            $data = $serializer->serialize($hands, 'json');
-            return new JsonResponse($data, Response::HTTP_OK, [], true); 
+    public function index(HandRepository $handRepository ): JsonResponse
+        {
+
+        $hands = $handRepository->findAll();
+
+        $data = [];
+
+        foreach ($hands as $hand) {
+            $data[] = [
+                "id" => $hand->getId(),
+                "card" => [
+                    "id" => $hand->getCard()->getId(),
+                    "name" => $hand->getCard()->getName(),
+                ],
+                "user" => [
+                    "id" => $hand->getUser()->getId(),
+                    "name" => $hand->getUser()->getEmail(),
+                ],
+                "party" =>[
+                    "id" => $hand->getParty()->getId(),
+                    "code" =>$hand->getParty()->getCode(),
+                    "winner_id" => $hand->getParty()->getWinner()
+                ]
+            ];
+        }
+
+        return new JsonResponse($data, Response::HTTP_OK, []);
     }
 
     #[Route('/new', name: 'app_hand_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
+        $data = json_decode($request->getContent(), true);
         $hand = new Hand();
         $form = $this->createForm(HandType::class, $hand);
-        $form->handleRequest($request);
+        $form->submit($data);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->persist($hand);
@@ -43,7 +65,25 @@ final class HandController extends AbstractController
             'form' => $form,
         ]);
     }
+    //
+    {
+        $data = json_decode($request->getContent(), true);
+        $related = new Related();
 
+        // Utilisation du formulaire pour la validation et le mapping
+        $form = $this->createForm(RelatedType::class, $related);
+
+
+
+        $entityManager->persist($related);
+        $entityManager->flush();
+
+        $jsonData = $serializer->serialize($related, 'json', ['groups' => 'related:read']);
+
+
+        return new JsonResponse($jsonData, Response::HTTP_CREATED, [], true);
+
+    }
     #[Route('/{id}', name: 'app_hand_show', methods: ['GET'])]
     public function show(Hand $hand): Response
     {
