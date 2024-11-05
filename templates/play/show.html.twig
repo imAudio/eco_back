@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Play{% endblock %}
+
+{% block body %}
+    <h1>Play</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ play.id }}</td>
+            </tr>
+            <tr>
+                <th>Turn</th>
+                <td>{{ play.turn }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_play_index') }}">back to list</a>
+
+    <a href="{{ path('app_play_edit', {'id': play.id}) }}">edit</a>
+
+    {{ include('play/_delete_form.html.twig') }}
+{% endblock %}
