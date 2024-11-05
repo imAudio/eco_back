@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Combo{% endblock %}
+
+{% block body %}
+    <h1>Edit Combo</h1>
+
+    {{ include('combo/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_combo_index') }}">back to list</a>
+
+    {{ include('combo/_delete_form.html.twig') }}
+{% endblock %}

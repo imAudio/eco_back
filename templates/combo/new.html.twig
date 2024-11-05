@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Combo{% endblock %}
+
+{% block body %}
+    <h1>Create new Combo</h1>
+
+    {{ include('combo/_form.html.twig') }}
+
+    <a href="{{ path('app_combo_index') }}">back to list</a>
+{% endblock %}
