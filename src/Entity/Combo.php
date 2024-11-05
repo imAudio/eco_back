@@ -2,51 +2,38 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
-use App\Repository\CardRepository;
+use App\Repository\ComboRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity(repositoryClass: CardRepository::class)]
-#[ApiResource]
-class Card
+#[ORM\Entity(repositoryClass: ComboRepository::class)]
+class Combo
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['card:read', 'card:write', 'related:read'])]
+    #[Groups(['combo:read', 'combo:write', 'related:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['card:read', 'card:write', 'related:read'])]
+    #[Groups(['combo:read', 'combo:write', 'related:read'])]
     private ?string $name = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $type = null;
-
+    #[Groups(['related:read'])]
     #[ORM\Column]
     private ?int $value = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $capacity = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $image = null;
 
     /**
      * @var Collection<int, Related>
      */
-    #[ORM\OneToMany(targetEntity: Related::class, mappedBy: 'card')]
+    #[ORM\OneToMany(targetEntity: Related::class, mappedBy: 'combo')]
     private Collection $relateds;
 
     public function __construct()
     {
         $this->relateds = new ArrayCollection();
     }
-
-
 
     public function getId(): ?int
     {
@@ -65,18 +52,6 @@ class Card
         return $this;
     }
 
-    public function getType(): ?string
-    {
-        return $this->type;
-    }
-
-    public function setType(string $type): static
-    {
-        $this->type = $type;
-
-        return $this;
-    }
-
     public function getValue(): ?int
     {
         return $this->value;
@@ -85,30 +60,6 @@ class Card
     public function setValue(int $value): static
     {
         $this->value = $value;
-
-        return $this;
-    }
-
-    public function getCapacity(): ?string
-    {
-        return $this->capacity;
-    }
-
-    public function setCapacity(string $capacity): static
-    {
-        $this->capacity = $capacity;
-
-        return $this;
-    }
-
-    public function getImage(): ?string
-    {
-        return $this->image;
-    }
-
-    public function setImage(string $image): static
-    {
-        $this->image = $image;
 
         return $this;
     }
@@ -125,7 +76,7 @@ class Card
     {
         if (!$this->relateds->contains($related)) {
             $this->relateds->add($related);
-            $related->setCard($this);
+            $related->setCombo($this);
         }
 
         return $this;
@@ -135,8 +86,8 @@ class Card
     {
         if ($this->relateds->removeElement($related)) {
             // set the owning side to null (unless already changed)
-            if ($related->getCard() === $this) {
-                $related->setCard(null);
+            if ($related->getCombo() === $this) {
+                $related->setCombo(null);
             }
         }
 

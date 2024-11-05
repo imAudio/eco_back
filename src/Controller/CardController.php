@@ -28,23 +28,25 @@ final class CardController extends AbstractController
     #[Route('/new', name: 'app_card_new', methods: ['POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
+
         $data = json_decode($request->getContent(), true);
+
         $card = new Card();
 
         // Utilisation du formulaire pour la validation et le mapping
         $form = $this->createForm(CardType::class, $card);
+
         $form->submit($data);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($card);
-            $entityManager->flush();
 
-            $jsonData = $serializer->serialize($card, 'json');
+        $entityManager->persist($card);
+        $entityManager->flush();
 
-            return new JsonResponse($jsonData, Response::HTTP_CREATED, [], true);
-        }
+        $jsonData = $serializer->serialize($card, 'json');
 
-        return new JsonResponse(['error' => 'Invalid data'], Response::HTTP_BAD_REQUEST);
+        return new JsonResponse($jsonData, Response::HTTP_CREATED, [], true);
+
+
     }
 
     #[Route('/{id}', name: 'app_card_show', methods: ['GET'])]
