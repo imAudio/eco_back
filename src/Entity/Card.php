@@ -41,9 +41,16 @@ class Card
     #[ORM\OneToMany(targetEntity: Related::class, mappedBy: 'card')]
     private Collection $relateds;
 
+    /**
+     * @var Collection<int, Hand>
+     */
+    #[ORM\OneToMany(targetEntity: Hand::class, mappedBy: 'card')]
+    private Collection $hands;
+
     public function __construct()
     {
         $this->relateds = new ArrayCollection();
+        $this->hands = new ArrayCollection();
     }
 
 
@@ -137,6 +144,36 @@ class Card
             // set the owning side to null (unless already changed)
             if ($related->getCard() === $this) {
                 $related->setCard(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Hand>
+     */
+    public function getHands(): Collection
+    {
+        return $this->hands;
+    }
+
+    public function addHand(Hand $hand): static
+    {
+        if (!$this->hands->contains($hand)) {
+            $this->hands->add($hand);
+            $hand->setCard($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHand(Hand $hand): static
+    {
+        if ($this->hands->removeElement($hand)) {
+            // set the owning side to null (unless already changed)
+            if ($hand->getCard() === $this) {
+                $hand->setCard(null);
             }
         }
 
