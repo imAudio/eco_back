@@ -27,14 +27,15 @@ class HandType extends AbstractType
             ->add('party', EntityType::class, [
                 'class' => Party::class,
                 'choice_label' => 'id',
-            ])
-        ;
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => Hand::class,
+            'csrf_protection' => false,  // Désactive la protection CSRF pour les requêtes JSON
+            'allow_extra_fields' => true // Permet les champs supplémentaires
         ]);
     }
 }
