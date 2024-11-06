@@ -6,6 +6,7 @@ use App\Entity\Hand;
 use App\Entity\User;
 use App\Entity\Card;
 use App\Entity\Party;
+
 use App\Form\HandType;
 use App\Repository\HandRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,12 +14,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+
+use Symfony\Component\Serializer\SerializerInterface;
+
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 #[Route('api/hand')]
 final class HandController extends AbstractController
 {
-    #[Route('',name:'app_hand_index', methods: ['GET'])]
     public function index(HandRepository $handRepository ): JsonResponse
         {
 
@@ -240,5 +243,4 @@ public function delete(Request $request, HandRepository $handRepository, EntityM
 
     return new JsonResponse(['message' => 'Successfully deleted'], Response::HTTP_OK);
 }
-
 }
