@@ -5,8 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3589da19-641a-4e57-b515-d2a88d7210f8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/Entity/Card.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Entity/Card.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Entity/User.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Entity/User.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/packages/lexik_jwt_authentication.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/config/packages/lexik_jwt_authentication.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Controller/RelatedController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/RelatedController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Entity/Player.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Entity/Player.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -191,7 +193,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "bdd",
+    "git-widget-placeholder": "playerController",
     "last_opened_file_path": "C:/laragon/www/CercleProjet/eco_back",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",

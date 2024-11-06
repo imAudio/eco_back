@@ -2,23 +2,28 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\PlayerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PlayerRepository::class)]
+#[ApiResource]
 class Player
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['player:read', 'player:write'])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'players')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'players')]
+    #[Groups(['player:read'])]
     private ?User $user = null;
 
-    #[ORM\ManyToOne(inversedBy: 'players')]
-    #[ORM\JoinColumn(nullable: false)]
+
+    #[ORM\ManyToOne(targetEntity: Party::class, inversedBy: 'players')]
+    #[Groups(['player:read'])]
     private ?Party $party = null;
 
     #[ORM\Column]
