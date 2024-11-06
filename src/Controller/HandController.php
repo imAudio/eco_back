@@ -112,6 +112,7 @@ final class HandController extends AbstractController
             $data = [];
             foreach ($hands as $hand) {
                 $data[] = [
+                    "id_card" => $hand->getCard()->getId(),
                     "name_card" => $hand->getCard()->getName(),
                 ];
             }

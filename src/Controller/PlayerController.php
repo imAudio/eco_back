@@ -25,7 +25,21 @@ final class PlayerController extends AbstractController
 
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
+    #[Route('/by-party/{id_party}', name: 'app_player_by_party', methods: ['GET'])]
+    public function byParty(PlayerRepository $playerRepository,$id_party): JsonResponse
+    {
+        $players = $playerRepository->findBy(['party' => $id_party]);
+        $data = [];
 
+        foreach ($players as $player) {
+            $data[] = [
+                "id_user" => $player->getUser()->getId(),
+                "username" => explode('@', $player->getUser()->getEmail())[0]
+            ];
+
+        }
+        return new JsonResponse($data, Response::HTTP_OK, []);
+    }
     #[Route('/new', name: 'app_player_new', methods: ['POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
