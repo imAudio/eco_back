@@ -20,6 +20,8 @@ class River
     #[ORM\ManyToOne]
     private ?Card $card = null;
 
+
+
     public function getId(): ?int
     {
         return $this->id;
