@@ -36,10 +36,24 @@ class Party
     #[ORM\OneToMany(targetEntity: Player::class, mappedBy: 'party')]
     private Collection $players;
 
+    /**
+     * @var Collection<int, ChatParty>
+     */
+    #[ORM\OneToMany(targetEntity: ChatParty::class, mappedBy: 'party')]
+    private Collection $chatParties;
+
+    /**
+     * @var Collection<int, ChatParty>
+     */
+    #[ORM\OneToMany(targetEntity: ChatParty::class, mappedBy: 'party')]
+    private Collection $Party;
+
     public function __construct()
     {
         $this->plays = new ArrayCollection();
         $this->players = new ArrayCollection();
+        $this->chatParties = new ArrayCollection();
+        $this->Party = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -137,6 +151,66 @@ class Party
             // set the owning side to null (unless already changed)
             if ($player->getParty() === $this) {
                 $player->setParty(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ChatParty>
+     */
+    public function getChatParties(): Collection
+    {
+        return $this->chatParties;
+    }
+
+    public function addChatParty(ChatParty $chatParty): static
+    {
+        if (!$this->chatParties->contains($chatParty)) {
+            $this->chatParties->add($chatParty);
+            $chatParty->setParty($this);
+        }
+
+        return $this;
+    }
+
+    public function removeChatParty(ChatParty $chatParty): static
+    {
+        if ($this->chatParties->removeElement($chatParty)) {
+            // set the owning side to null (unless already changed)
+            if ($chatParty->getParty() === $this) {
+                $chatParty->setParty(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ChatParty>
+     */
+    public function getParty(): Collection
+    {
+        return $this->Party;
+    }
+
+    public function addParty(ChatParty $party): static
+    {
+        if (!$this->Party->contains($party)) {
+            $this->Party->add($party);
+            $party->setParty($this);
+        }
+
+        return $this;
+    }
+
+    public function removeParty(ChatParty $party): static
+    {
+        if ($this->Party->removeElement($party)) {
+            // set the owning side to null (unless already changed)
+            if ($party->getParty() === $this) {
+                $party->setParty(null);
             }
         }
 

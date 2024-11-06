@@ -54,11 +54,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Friend::class, mappedBy: 'sent')]
     private Collection $friends;
 
+    /**
+     * @var Collection<int, ChatParty>
+     */
+    #[ORM\OneToMany(targetEntity: ChatParty::class, mappedBy: 'user')]
+    private Collection $chatParties;
+
     public function __construct()
     {
         $this->parties = new ArrayCollection();
         $this->players = new ArrayCollection();
         $this->friends = new ArrayCollection();
+        $this->chatParties = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -209,6 +216,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($friend->getSent() === $this) {
                 $friend->setSent(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ChatParty>
+     */
+    public function getChatParties(): Collection
+    {
+        return $this->chatParties;
+    }
+
+    public function addChatParty(ChatParty $chatParty): static
+    {
+        if (!$this->chatParties->contains($chatParty)) {
+            $this->chatParties->add($chatParty);
+            $chatParty->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeChatParty(ChatParty $chatParty): static
+    {
+        if ($this->chatParties->removeElement($chatParty)) {
+            // set the owning side to null (unless already changed)
+            if ($chatParty->getUser() === $this) {
+                $chatParty->setUser(null);
             }
         }
 
