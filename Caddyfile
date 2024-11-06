@@ -1,0 +1,11 @@
+:80 {
+    root * /srv
+    encode gzip
+    mercure {
+        publisher_jwt  PZVJXlIsOGMgHpBFX50HHD3201/K1j+zbbokHKs9bjA=
+        subscriber_jwt PZVJXlIsOGMgHpBFX50HHD3201/K1j+zbbokHKs9bjA=
+        cors_origins *
+        publish_origins *
+    }
+    respond "Mercure Hub is up and running" 200
+}
