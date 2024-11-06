@@ -8,6 +8,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Controller/HandController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/HandController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Controller/PlayerController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/PlayerController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Controller/RiverController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/RiverController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Entity/River.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Entity/River.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -192,7 +194,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "dev",
+    "git-widget-placeholder": "switchCard",
     "last_opened_file_path": "C:/laragon/www/CercleProjet/eco_back",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -228,7 +230,7 @@
       <workItem from="1730792340177" duration="28000" />
       <workItem from="1730792370002" duration="893000" />
       <workItem from="1730801777807" duration="4797000" />
-      <workItem from="1730883001599" duration="3063000" />
+      <workItem from="1730883001599" duration="12623000" />
     </task>
     <servers />
   </component>

@@ -5,6 +5,8 @@ use App\Entity\River;
 use App\Entity\Card;
 use App\Entity\Party;
 use App\Form\RiverType;
+use App\Repository\CardRepository;
+use App\Repository\HandRepository;
 use App\Repository\RiverRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -41,31 +43,117 @@ final class RiverController extends AbstractController
 
         return new JsonResponse($data, Response::HTTP_OK, []);
     }
+    #[Route('/by-party/{id_party}',name:'app_river_by_party', methods: ['GET'])]
+    public function byParty($id_party, RiverRepository $riverRepository ): JsonResponse
+    {
+        $cards = $riverRepository->findBy(['party'=>$id_party]);
+        $data = [];
+        foreach ($cards as $card) {
+            $data[] = [
+                "id_card" => $card->getCard()->getId(),
+                "image" => $card->getCard()->getImage(),
+                "name" => $card->getCard()->getName(),
+                "value" => $card->getCard()->getValue(),
+                "capacity" => $card->getCard()->getCapacity(),
+                "type" => $card->getCard()->getType(),
+            ];
+        }
 
-    #[Route('/{id}', name: 'app_river_show', methods: ['GET'])]  
-    public function show(int $id, RiverRepository $riverRepository): JsonResponse
-{
-    $river = $riverRepository->find($id);
-
-    if (!$river) {
-        return new JsonResponse(['error' => 'River not found'], Response::HTTP_NOT_FOUND);
+        return new JsonResponse($data, Response::HTTP_OK, []);
     }
 
-    $data = [
-        "id" => $river->getId(),
-        "card" => [
-            "id" => $river->getCard()->getId(),
-            "name" => $river->getCard()->getName(),
-        ],
-        "party" => [
-            "id" => $river->getParty()->getId(),
-            "code" => $river->getParty()->getCode(),
-            "winner_id" => $river->getParty()->getWinner(),
-        ]
-    ];
-    return new JsonResponse($data, Response::HTTP_OK);
-}
-#[Route('/new', name: 'app_river_new', methods: ['GET', 'POST'])]
+    #[Route('/switch', name: 'app_river_switch', methods: ['POST'])]
+    public function switch(
+        Request $request,
+        RiverRepository $riverRepository,
+        CardRepository $cardRepository,
+        EntityManagerInterface $entityManager,
+        HandRepository $handRepository
+    ): JsonResponse {
+        // Décoder le contenu JSON de la requête
+        $data = json_decode($request->getContent(), true);
+
+        // Vérifier si les données nécessaires sont présentes
+        if (!isset($data['id_card_river'], $data['id_card_hand'], $data['id_party'])) {
+            return new JsonResponse(['error' => 'Missing required parameters'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Récupérer les valeurs des clés dans le tableau JSON
+        $idCardRiver = $data['id_card_river'];
+        $idCardHand = $data['id_card_hand'];
+        $idParty = $data['id_party'];
+
+
+
+        // Rechercher la carte dans la rivière en fonction des paramètres reçus
+        $riverCard = $riverRepository->findOneBy([
+            'card' => $idCardRiver,
+            'party' => $idParty,
+        ]);
+
+        // Gestion des erreurs pour la carte de la rivière
+        if (!$riverCard) {
+            return new JsonResponse(['error' => 'River card not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Trouver l'entité Card correspondant à idCardHand
+        $cardHand = $cardRepository->find($idCardHand);
+        if (!$cardHand) {
+            return new JsonResponse(['error' => 'Hand card not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Mettre à jour la carte de la rivière avec la carte de la main
+        $riverCard->setCard($cardHand);
+        $entityManager->flush();
+
+        // Rechercher la carte dans la main en fonction des paramètres reçus
+        $handCard = $handRepository->findOneBy([
+            'card' => $idCardHand,
+            'party' => $idParty,
+            'user' => $this->getUser(),
+        ]);
+
+        // Gestion des erreurs pour la carte de la main
+        if (!$handCard) {
+            return new JsonResponse(['error' => 'Hand card not found in river'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Trouver l'entité Card correspondant à idCardRiver
+        $cardRiver = $cardRepository->find($idCardRiver);
+        if (!$cardRiver) {
+            return new JsonResponse(['error' => 'River card not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Mettre à jour la carte de la main avec la carte de la rivière
+        $handCard->setCard($cardRiver);
+        $entityManager->flush();
+
+        return new JsonResponse(['status' => 'Cards switched successfully'], Response::HTTP_OK);
+    }
+    #[Route('/{id}', name: 'app_river_show', methods: ['GET'])]  
+    public function show(int $id, RiverRepository $riverRepository): JsonResponse
+    {
+        $river = $riverRepository->find($id);
+
+        if (!$river) {
+            return new JsonResponse(['error' => 'River not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = [
+            "id" => $river->getId(),
+            "card" => [
+                "id" => $river->getCard()->getId(),
+                "name" => $river->getCard()->getName(),
+            ],
+            "party" => [
+                "id" => $river->getParty()->getId(),
+                "code" => $river->getParty()->getCode(),
+                "winner_id" => $river->getParty()->getWinner(),
+            ]
+        ];
+        return new JsonResponse($data, Response::HTTP_OK);
+    }
+    #[Route('/new', name: 'app_river_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): JsonResponse
 {
     $data = json_decode($request->getContent(), true);
@@ -110,78 +198,78 @@ final class RiverController extends AbstractController
 
     return new JsonResponse(['errors' => $errors], Response::HTTP_BAD_REQUEST);
 }
-#[Route('/put', name: 'app_river_edit', methods: ['PUT'])]
-public function edit(Request $request, RiverRepository $riverRepository, EntityManagerInterface $entityManager): JsonResponse
-{
-    $data = json_decode($request->getContent(), true);
+    #[Route('/put', name: 'app_river_edit', methods: ['PUT'])]
+    public function edit(Request $request, RiverRepository $riverRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
 
-    // Vérifiez que l'ID est présent dans la requête
-    if (!isset($data['id'])) {
-        return new JsonResponse(['error' => 'ID is required'], Response::HTTP_BAD_REQUEST);
-    }
-
-    $river = $riverRepository->find($data['id']);
-
-    if (!$river) {
-        return new JsonResponse(['error' => 'River not found'], Response::HTTP_NOT_FOUND);
-    }
-    // Vérifiez la présence des IDs des entités liées
-
-    if (isset($data['card'])) {
-        $card = $entityManager->getRepository(Card::class)->find($data['card']);
-        if (!$card) {
-            return new JsonResponse(['error' => 'Card not found'], Response::HTTP_BAD_REQUEST);
+        // Vérifiez que l'ID est présent dans la requête
+        if (!isset($data['id'])) {
+            return new JsonResponse(['error' => 'ID is required'], Response::HTTP_BAD_REQUEST);
         }
-        $river->setCard($card);
-    }
 
-    if (isset($data['party'])) {
-        $party = $entityManager->getRepository(Party::class)->find($data['party']);
-        if (!$party) {
-            return new JsonResponse(['error' => 'Party not found'], Response::HTTP_BAD_REQUEST);
+        $river = $riverRepository->find($data['id']);
+
+        if (!$river) {
+            return new JsonResponse(['error' => 'River not found'], Response::HTTP_NOT_FOUND);
         }
-        $river->setParty($party);
+        // Vérifiez la présence des IDs des entités liées
+
+        if (isset($data['card'])) {
+            $card = $entityManager->getRepository(Card::class)->find($data['card']);
+            if (!$card) {
+                return new JsonResponse(['error' => 'Card not found'], Response::HTTP_BAD_REQUEST);
+            }
+            $river->setCard($card);
+        }
+
+        if (isset($data['party'])) {
+            $party = $entityManager->getRepository(Party::class)->find($data['party']);
+            if (!$party) {
+                return new JsonResponse(['error' => 'Party not found'], Response::HTTP_BAD_REQUEST);
+            }
+            $river->setParty($party);
+        }
+
+        // Enregistrer les modifications
+        $entityManager->flush();
+
+        // Préparer la réponse JSON
+        $responseData = [
+            "id" => $river->getId(),
+            "card" => [
+                "id" => $river->getCard()->getId(),
+                "name" => $river->getCard()->getName(),
+            ],
+            "party" => [
+                "id" => $river->getParty()->getId(),
+                "code" => $river->getParty()->getCode(),
+                "winner_id" => $river->getParty()->getWinner(),
+            ]
+        ];
+
+        return new JsonResponse($responseData, Response::HTTP_OK);
     }
+    #[Route('/delete', name: 'app_river_delete', methods: ['DELETE'])]
+    public function delete(Request $request, RiverRepository $riverRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
 
-    // Enregistrer les modifications
-    $entityManager->flush();
+        // Vérifiez que l'ID est présent dans la requête
+        if (!isset($data['id'])) {
+            return new JsonResponse(['error' => 'ID is required'], Response::HTTP_BAD_REQUEST);
+        }
 
-    // Préparer la réponse JSON
-    $responseData = [
-        "id" => $river->getId(),
-        "card" => [
-            "id" => $river->getCard()->getId(),
-            "name" => $river->getCard()->getName(),
-        ],
-        "party" => [
-            "id" => $river->getParty()->getId(),
-            "code" => $river->getParty()->getCode(),
-            "winner_id" => $river->getParty()->getWinner(),
-        ]
-    ];
+        $river = $riverRepository->find($data['id']);
 
-    return new JsonResponse($responseData, Response::HTTP_OK);
-}
-#[Route('/delete', name: 'app_river_delete', methods: ['DELETE'])]
-public function delete(Request $request, RiverRepository $riverRepository, EntityManagerInterface $entityManager): JsonResponse
-{
-    $data = json_decode($request->getContent(), true);
+        if (!$river) {
+            return new JsonResponse(['error' => 'river not found'], Response::HTTP_NOT_FOUND);
+        }
 
-    // Vérifiez que l'ID est présent dans la requête
-    if (!isset($data['id'])) {
-        return new JsonResponse(['error' => 'ID is required'], Response::HTTP_BAD_REQUEST);
+        // Supprimer l'objet `River`
+        $entityManager->remove($river);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'Successfully deleted'], Response::HTTP_OK);
     }
-
-    $river = $riverRepository->find($data['id']);
-
-    if (!$river) {
-        return new JsonResponse(['error' => 'river not found'], Response::HTTP_NOT_FOUND);
     }
-
-    // Supprimer l'objet `River`
-    $entityManager->remove($river);
-    $entityManager->flush();
-
-    return new JsonResponse(['message' => 'Successfully deleted'], Response::HTTP_OK);
-}
-}

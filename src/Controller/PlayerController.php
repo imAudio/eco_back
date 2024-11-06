@@ -34,7 +34,8 @@ final class PlayerController extends AbstractController
         foreach ($players as $player) {
             $data[] = [
                 "id_user" => $player->getUser()->getId(),
-                "username" => explode('@', $player->getUser()->getEmail())[0]
+                "username" => explode('@', $player->getUser()->getEmail())[0],
+                "point" => $player->getPoint(),
             ];
 
         }
