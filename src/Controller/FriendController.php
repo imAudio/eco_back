@@ -200,4 +200,117 @@ public function delete(Request $request, FriendRepository $friendRepository, Ent
 
     return new JsonResponse(['message' => 'Successfully deleted'], Response::HTTP_OK);
 }
+/*
+#[Route('/friends/check-pending', name: 'friend_check_pending', methods: ['GET'])]
+public function checkPendingFriends(FriendRepository $friendRepository): JsonResponse
+{
+    // Récupérer toutes les relations en état "pending"
+    $friends = $friendRepository->findBy(['state' => 'pending']);
+    $response = [];
+
+    foreach ($friends as $friend) {
+        $sentId = $friend->getSent()->getId();
+        $receiverId = $friend->getReceiver()->getId();
+
+        // Vérifier s'il existe une relation acceptée inverse
+        $acceptedFriend = $friendRepository->findOneBy([
+            'sent' => $receiverId,
+            'receiver' => $sentId,
+            'state' => 'accepted'
+        ]);
+
+        if ($acceptedFriend) {
+            // Cas où il existe une demande acceptée inverse
+            $response[] = [
+                'sent_id' => $sentId,
+                'receiver_id' => $receiverId,
+                'state' => 'pending',
+                'message' => 'This user has already accepted your friend request. You can confirm the friendship by accepting their request.'
+            ];
+        } else {
+            // Cas de demande en attente sans demande acceptée inverse
+            $response[] = [
+                'sent_id' => $sentId,
+                'receiver_id' => $receiverId,
+                'state' => 'pending',
+                'message' => 'Waiting for the receiver to accept the friendship request.'
+            ];
+        }
+    }
+
+    return new JsonResponse($response, JsonResponse::HTTP_OK);
+}
+*/
+#[Route('/pending/{userId}', name: 'check_pending_requests', methods: ['GET'])]
+public function checkPendingRequests(int $userId, FriendRepository $friendRepository, UserRepository $userRepository): JsonResponse
+{
+    $pendingFriends = $friendRepository->findBy(['sent' => $userId, 'state' => 'pending']);
+    $response = [];
+
+    foreach ($pendingFriends as $friend) {
+        $sentId = $friend->getSent()->getId();
+        $receiverId = $friend->getReceiver()->getId();
+        $receiverEmail = $friend->getReceiver()->getEmail();
+
+        // Vérifier si l'utilisateur receiver a déjà accepté
+        $acceptedFriend = $friendRepository->findOneBy([
+            'sent' => $receiverId,
+            'receiver' => $sentId,
+            'state' => 'accepted'
+        ]);
+
+        if ($acceptedFriend) {
+            // Cas où le receiver a déjà accepté
+            $response[] = [
+                'sent_id' => $sentId,
+                'receiver_id' => $receiverId,
+                'state' => 'pending',
+                'message' => "$receiverEmail a déjà accepté votre demande d'amitié. Vous pouvez confirmer l'amitié en acceptant sa demande."
+            ];
+        } else {
+            // Cas de demande en attente sans acceptation inverse
+            $response[] = [
+                'sent_id' => $sentId,
+                'receiver_id' => $receiverId,
+                'state' => 'pending',
+                'message' => "En attente d’acceptation de la demande d’amitié de $receiverEmail."
+            ];
+        }
+    }
+
+    return new JsonResponse($response, JsonResponse::HTTP_OK);
+}
+
+
+#[Route('/status/{userId}', name: 'check_friendship_status', methods: ['GET'])]
+public function checkFriendshipStatus(int $userId, FriendRepository $friendRepository): JsonResponse
+{
+    $friends = $friendRepository->findBy(['sent' => $userId, 'state' => 'accepted']);
+    $response = [];
+
+    foreach ($friends as $friend) {
+        $receiver = $friend->getReceiver();
+        $receiverId = $receiver->getId();
+        $receiverEmail = $receiver->getEmail(); // Récupérer l'email du receiver
+
+        $inverseFriend = $friendRepository->findOneBy([
+            'sent' => $receiverId,
+            'receiver' => $userId,
+            'state' => 'accepted'
+        ]);
+
+        if ($inverseFriend) {
+            // Ajouter l'email dans la réponse
+            $response[] = [
+                'friend_id' => $receiverId,
+                'friend_email' => $receiverEmail,
+                'message' => "Vous êtes amis avec $receiverEmail"
+            ];
+        }
+    }
+
+    return new JsonResponse($response, JsonResponse::HTTP_OK);
+}
+
+
 }
