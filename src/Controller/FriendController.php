@@ -282,33 +282,39 @@ final class FriendController extends AbstractController
     }
 
 
-    #[Route('/status/{userId}', name: 'check_friendship_status', methods: ['GET'])]
-    public function checkFriendshipStatus(int $userId, FriendRepository $friendRepository): JsonResponse
-    {
-        $friends = $friendRepository->findBy(['sent' => $userId, 'state' => 'accepted']);
-        $response = [];
-
-        foreach ($friends as $friend) {
-            $receiver = $friend->getReceiver();
-            $receiverId = $receiver->getId();
-            $receiverEmail = $receiver->getEmail(); // Récupérer l'email du receiver
-
-            $inverseFriend = $friendRepository->findOneBy([
-                'sent' => $receiverId,
-                'receiver' => $userId,
-                'state' => 'accepted'
-            ]);
-
-            if ($inverseFriend) {
-                // Ajouter l'email dans la réponse
-                $response[] = [
-                    'friend_id' => $receiverId,
-                    'friend_email' => $receiverEmail,
-                    'message' => "Vous êtes amis avec $receiverEmail"
-                ];
-            }
-        }
-
-        return new JsonResponse($response, JsonResponse::HTTP_OK);
+    #[Route('/status/friends', name: 'check_friendship_status', methods: ['GET'])]
+public function checkFriendshipStatus(FriendRepository $friendRepository): JsonResponse
+{
+    $user = $this->getUser();
+    if (!$user) {
+        return new JsonResponse(['error' => 'Utilisateur non authentifié'], JsonResponse::HTTP_UNAUTHORIZED);
     }
+    
+    $userId = $user->getId();
+    $friends = $friendRepository->findBy(['sent' => $userId, 'state' => 'accepted']);
+    $response = [];
+
+    foreach ($friends as $friend) {
+        $receiver = $friend->getReceiver();
+        $receiverId = $receiver->getId();
+        $receiverEmail = $receiver->getEmail();
+
+        $inverseFriend = $friendRepository->findOneBy([
+            'sent' => $receiverId,
+            'receiver' => $userId,
+            'state' => 'accepted'
+        ]);
+
+        if ($inverseFriend) {
+            $response[] = [
+                'friend_id' => $receiverId,
+                'friend_email' => $receiverEmail,
+                'message' => "Vous êtes amis avec $receiverEmail"
+            ];
+        }
+    }
+
+    return new JsonResponse($response, JsonResponse::HTTP_OK);
+}
+
 }
