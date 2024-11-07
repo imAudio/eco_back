@@ -291,7 +291,7 @@ public function checkFriendshipStatus(FriendRepository $friendRepository): JsonR
     }
     
     $userId = $user->getId();
-    $friends = $friendRepository->findBy(['sent' => $userId, 'state' => 'accepted']);
+    $friends = $friendRepository->findBy(['sent' => $userId]);
     $response = [];
 
     foreach ($friends as $friend) {
@@ -299,19 +299,12 @@ public function checkFriendshipStatus(FriendRepository $friendRepository): JsonR
         $receiverId = $receiver->getId();
         $receiverEmail = $receiver->getEmail();
 
-        $inverseFriend = $friendRepository->findOneBy([
-            'sent' => $receiverId,
-            'receiver' => $userId,
-            'state' => 'accepted'
-        ]);
-
-        if ($inverseFriend) {
-            $response[] = [
-                'friend_id' => $receiverId,
-                'friend_email' => $receiverEmail,
-                'message' => "Vous êtes amis avec $receiverEmail"
-            ];
-        }
+        $response[] = [
+            'friend_id' => $receiverId,
+            'friend_email' => $receiverEmail,
+            'message' => $friend->getState() === 'accepted' ? "Vous êtes amis avec $receiverEmail" : "Demande en attente avec $receiverEmail",
+            'state' => $friend->getState()  // Inclut l'état pour distinguer les amis et les demandes en attente
+        ];
     }
 
     return new JsonResponse($response, JsonResponse::HTTP_OK);
