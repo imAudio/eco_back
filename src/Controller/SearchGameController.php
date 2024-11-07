@@ -2,7 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\Hand;
+use App\Entity\Party;
+use App\Entity\Player;
+use App\Entity\River;
 use App\Entity\SearchGame;
+use App\Repository\CardRepository;
+use App\Repository\PartyRepository;
 use App\Repository\SearchGameRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -34,9 +40,11 @@ final class SearchGameController extends AbstractController
     }
 
     #[Route('/new', name: 'app_search_game_new', methods: ['POST'])]
-    public function new(EntityManagerInterface $entityManager,SearchGameRepository $searchGameRepository, HubInterface $hub): JsonResponse
+    public function new(EntityManagerInterface $entityManager,SearchGameRepository $searchGameRepository, CardRepository $cardRepository, HubInterface $hub, PartyRepository $partyRepository): JsonResponse
     {
-        $userSearchGame = $searchGameRepository->find($this->getUser());
+
+        $userSearchGame = $searchGameRepository->findOneBy(["user" => $this->getUser()]);
+
         if ($userSearchGame === null) {
             $searchGame = new SearchGame();
 
@@ -47,9 +55,50 @@ final class SearchGameController extends AbstractController
 
             $gameStartded =  $searchGameRepository->findAll();
             if (count($gameStartded) >= 4 ) {
+
+                $party = new Party();
+                $party->setCode("lala");
+                $party->setTurn(1);
+
+                $entityManager->persist($party);
+                $entityManager->flush();
+
+                $players = $searchGameRepository->findAll();
+                $cards = $cardRepository->findAll();
+
+                shuffle($cards);
+
+                foreach ($players as $player) {
+                    $play = new Player();
+
+                    $play->setUser($player->getUser());
+                    $play->setParty($party);
+                    $play->setPoint(0);
+                    $entityManager->persist($play);
+                    $entityManager->flush();
+
+                    for ($i = 0; $i < 2; $i++) {
+                        $hand = new Hand();
+                        $hand->setUser($player->getUser());
+                        $hand->setCard(array_shift($cards));
+                        $hand->setParty($party);
+                        $entityManager->persist($hand);
+                        $entityManager->flush();
+                    }
+
+                }
+
+                for ($i = 0; $i < 5; $i++) {
+                    $river = new River();
+                    $river->setCard(array_shift($cards));
+                    $river->setParty($party);
+                    $entityManager->persist($river);
+                    $entityManager->flush();
+                }
+                $idParty = $party->getId();
                 $update = new Update(
-                    "https://example.com/game",
-                    json_encode(['message' => 'Le jeu commence !'])
+                    "game_start",
+                    json_encode(['message' => 'start','id' => $idParty])
                 );
                 $hub->publish($update);
 
@@ -58,8 +107,6 @@ final class SearchGameController extends AbstractController
 
             return new JsonResponse($searchGame, Response::HTTP_CREATED, []);
         }
-
-
         return new JsonResponse("deja la", Response::HTTP_OK, []);
     }
 

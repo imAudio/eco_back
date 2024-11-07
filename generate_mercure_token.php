@@ -14,7 +14,7 @@ $payload = [
         'subscribe' => ['*'], // Autorise l'abonnement à tous les topics
     ],
     'iat' => time(),
-    'exp' => time() + 3600 // Durée de validité d'une heure
+    'exp' => time() + 604800 // Durée de validité d'une heure
 ];
 
 // Génération du token

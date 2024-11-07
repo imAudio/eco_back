@@ -10,64 +10,76 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\User;
 
 
-#[Route('/chat-party')]
+#[Route('api/chat-party')]
 class ChatPartyController extends AbstractController
 {
     #[Route('/add', name: 'chat_party_add', methods: ['POST'])]
-public function addMessage(Request $request, EntityManagerInterface $entityManager, UserRepository $userRepository, PartyRepository $partyRepository): JsonResponse
-{
-    $data = json_decode($request->getContent(), true);
+    public function addMessage(Request $request, HubInterface $hub, EntityManagerInterface $entityManager, UserRepository $userRepository, PartyRepository $partyRepository): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
 
-    // Récupérer le contenu, l'utilisateur et la party à partir des données
-    $content = $data['content'] ?? null;
-    $userId = $data['user_id'] ?? null;
-    $partyId = $data['party_id'] ?? null;
+        // Récupérer le contenu, l'utilisateur et la party à partir des données
+        $content = $data['content'] ?? null;
+        $partyId = $data['party_id'] ?? null;
 
-    if (!$content || !$userId || !$partyId) {
-        return new JsonResponse(['error' => 'Missing required fields'], JsonResponse::HTTP_BAD_REQUEST);
+        if (!$content  || !$partyId) {
+            return new JsonResponse(['error' => 'Missing required fields'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+
+        $party = $partyRepository->find($partyId);
+
+        if (!$party) {
+            return new JsonResponse(['error' => 'Party not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        // Créer et sauvegarder le message
+        $chatParty = new ChatParty();
+        $chatParty->setContent($content);
+        $chatParty->setUser($this->getUser());
+        $chatParty->setParty($party);
+
+        $entityManager->persist($chatParty);
+        $entityManager->flush();
+        $update = new Update(
+            "game_chat_{$partyId}",  // Spécifier le topic de la partie pour Mercure
+            json_encode([
+                'action' => 'reload_chat',
+                'content' => $chatParty->getContent(),
+                'user_id' => $chatParty->getUser()->getId(),
+                'party_id' => $chatParty->getParty()->getId(),
+                'timestamp' => (new \DateTime())->format('Y-m-d H:i:s')
+            ])
+        );
+        $hub->publish($update);
+
+        // Retourner les informations demandées
+        return new JsonResponse([
+            'content' => $chatParty->getContent(),
+            'user_id' => $chatParty->getUser()->getId(),
+            'party_id' => $chatParty->getParty()->getId()
+        ], JsonResponse::HTTP_CREATED);
     }
 
-    $user = $userRepository->find($userId);
-    $party = $partyRepository->find($partyId);
 
-    if (!$user || !$party) {
-        return new JsonResponse(['error' => 'User or Party not found'], JsonResponse::HTTP_NOT_FOUND);
+    #[Route('/{partyId}', name: 'chat_party_get_by_party', methods: ['GET'])]
+    public function getMessagesByParty(int $partyId, ChatPartyRepository $chatPartyRepository): JsonResponse
+    {
+        $messages = $chatPartyRepository->findMessagesByPartyId($partyId);
+
+        // Vérifier s'il y a des messages
+        if (empty($messages)) {
+            return new JsonResponse(['message' => 'No messages found for this party'], JsonResponse::HTTP_OK);
+        }
+
+        return new JsonResponse($messages, JsonResponse::HTTP_OK);
     }
-
-    // Créer et sauvegarder le message
-    $chatParty = new ChatParty();
-    $chatParty->setContent($content);
-    $chatParty->setUser($user);
-    $chatParty->setParty($party);
-
-    $entityManager->persist($chatParty);
-    $entityManager->flush();
-
-    // Retourner les informations demandées
-    return new JsonResponse([
-        'content' => $chatParty->getContent(),
-        'user_id' => $chatParty->getUser()->getId(),
-        'party_id' => $chatParty->getParty()->getId()
-    ], JsonResponse::HTTP_CREATED);
-}
-
-
-#[Route('/{partyId}', name: 'chat_party_get_by_party', methods: ['GET'])]
-public function getMessagesByParty(int $partyId, ChatPartyRepository $chatPartyRepository): JsonResponse
-{
-    $messages = $chatPartyRepository->findMessagesByPartyId($partyId);
-
-    // Vérifier s'il y a des messages
-    if (empty($messages)) {
-        return new JsonResponse(['message' => 'No messages found for this party'], JsonResponse::HTTP_OK);
-    }
-
-    return new JsonResponse($messages, JsonResponse::HTTP_OK);
-}
 
 
 
