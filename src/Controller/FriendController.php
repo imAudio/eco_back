@@ -44,54 +44,72 @@ final class FriendController extends AbstractController
 
 
     #[Route('/new', name: 'app_friend_new', methods: ['POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, UserRepository $userRepository): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
+public function new(Request $request, EntityManagerInterface $entityManager, FriendRepository $friendRepository, UserRepository $userRepository): JsonResponse
+{
+    $data = json_decode($request->getContent(), true);
 
-        // Vérifiez que les données JSON sont valides
-        if ($data === null) {
-            return new JsonResponse(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
-        }
-
-        // Vérifiez que `sent_id`, `receiver_id`, et `state` sont présents
-        if (!isset($data['sent_id'], $data['receiver_id'], $data['state'])) {
-            return new JsonResponse(['error' => 'Missing required fields'], Response::HTTP_BAD_REQUEST);
-        }
-
-        // Récupérer les utilisateurs `sent` et `receiver`
-        $sentUser = $userRepository->find($data['sent_id']);
-        $receiverUser = $userRepository->find($data['receiver_id']);
-
-        if (!$sentUser || !$receiverUser) {
-            return new JsonResponse(['error' => 'User not found'], Response::HTTP_BAD_REQUEST);
-        }
-
-        // Créer une nouvelle instance de `Friend`
-        $friend = new Friend();
-        $friend->setSent($sentUser);
-        $friend->setReceiver($receiverUser);
-        $friend->setState($data['state']);
-
-        // Persister l'entité
-        $entityManager->persist($friend);
-        $entityManager->flush();
-
-        // Préparer la réponse JSON
-        $responseData = [
-            "id" => $friend->getId(),
-            "sent_user" => [
-                "id" => $friend->getSent()->getId(),
-                "email" => $friend->getSent()->getEmail(),
-            ],
-            "receiver_user" => [
-                "id" => $friend->getReceiver()->getId(),
-                "email" => $friend->getReceiver()->getEmail(),
-            ],
-            "state" => $friend->getState(),
-        ];
-
-        return new JsonResponse($responseData, Response::HTTP_CREATED);
+    // Vérifiez que les données JSON sont valides
+    if ($data === null) {
+        return new JsonResponse(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
     }
+
+    // Vérifiez que `sent_id`, `receiver_id`, et `state` sont présents
+    if (!isset($data['sent_id'], $data['receiver_id'])) {
+        return new JsonResponse(['error' => 'Missing required fields'], Response::HTTP_BAD_REQUEST);
+    }
+
+    // Récupérer les utilisateurs `sent` et `receiver`
+    $sentUser = $userRepository->find($data['sent_id']);
+    $receiverUser = $userRepository->find($data['receiver_id']);
+
+    if (!$sentUser || !$receiverUser) {
+        return new JsonResponse(['error' => 'User not found'], Response::HTTP_BAD_REQUEST);
+    }
+
+    // Rechercher une relation existante entre les utilisateurs
+    $existingFriend = $friendRepository->findOneBy([
+        'sent' => $sentUser,
+        'receiver' => $receiverUser,
+    ]);
+
+    if ($existingFriend) {
+        // Si la relation existe et est en "pending", passez-la à "accepted"
+        if ($existingFriend->getState() === 'pending') {
+            $existingFriend->setState('accepted');
+            $entityManager->flush();
+            return new JsonResponse(['message' => 'Amitié acceptée'], Response::HTTP_OK);
+        }
+
+        // Si la relation est déjà acceptée, retournez un message informatif
+        return new JsonResponse(['message' => 'Vous êtes déjà amis avec cet utilisateur'], Response::HTTP_OK);
+    }
+
+    // Sinon, créez une nouvelle demande d'ami avec `state` défini à "pending"
+    $friend = new Friend();
+    $friend->setSent($sentUser);
+    $friend->setReceiver($receiverUser);
+    $friend->setState('pending');
+
+    // Persister l'entité
+    $entityManager->persist($friend);
+    $entityManager->flush();
+
+    // Préparer la réponse JSON
+    $responseData = [
+        "id" => $friend->getId(),
+        "sent_user" => [
+            "id" => $friend->getSent()->getId(),
+            "email" => $friend->getSent()->getEmail(),
+        ],
+        "receiver_user" => [
+            "id" => $friend->getReceiver()->getId(),
+            "email" => $friend->getReceiver()->getEmail(),
+        ],
+        "state" => $friend->getState(),
+    ];
+
+    return new JsonResponse($responseData, Response::HTTP_CREATED);
+}
 
 
     #[Route('/{id}', name: 'app_friend_show', methods: ['GET'])]
@@ -308,6 +326,27 @@ public function checkFriendshipStatus(FriendRepository $friendRepository): JsonR
     }
 
     return new JsonResponse($response, JsonResponse::HTTP_OK);
+}
+// Dans FriendController.php
+
+#[Route('/{id}/accept', name: 'app_friend_accept', methods: ['POST'])]
+public function acceptFriend(int $id, FriendRepository $friendRepository, EntityManagerInterface $entityManager): JsonResponse
+{
+    // Trouver la relation d'amitié par ID
+    $friend = $friendRepository->find($id);
+
+    if (!$friend) {
+        return new JsonResponse(['error' => 'Amitié non trouvée'], JsonResponse::HTTP_NOT_FOUND);
+    }
+
+    // Mettre à jour l'état à "accepted"
+    $friend->setState('accepted');
+
+    // Enregistrer la modification dans la base de données
+    $entityManager->persist($friend);
+    $entityManager->flush();
+
+    return new JsonResponse(['message' => 'Amitié acceptée'], JsonResponse::HTTP_OK);
 }
 
 }
