@@ -311,3 +311,4 @@ final class FriendController extends AbstractController
 
         return new JsonResponse($response, JsonResponse::HTTP_OK);
     }
+}
