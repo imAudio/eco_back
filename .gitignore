@@ -1,7 +1,7 @@
 
 ###> symfony/framework-bundle ###
 
-
+.idea/workspace.xml
 /public/bundles/
 /var/
 /vendor/

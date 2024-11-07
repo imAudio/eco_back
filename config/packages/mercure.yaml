@@ -1,0 +1,9 @@
+mercure:
+    hubs:
+        default:
+            url: '%env(MERCURE_URL)%'           # L'URL du hub Mercure pour les publications
+            public_url: '%env(MERCURE_PUBLIC_URL)%' # L'URL publique accessible aux clients
+            jwt:
+                secret: 'PZVJXlIsOGMgHpBFX50HHD3201/K1j+zbbokHKs9bjA=' # Utilisation de la clé partagée pour signer les JWT
+                publish: '*'                    # Permet la publication sans restriction
+                subscribe: '*'
