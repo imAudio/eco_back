@@ -5,15 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="de5f4593-4be4-4f00-bb8e-3d3370dc53db" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Entity/ChatParty.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Repository/ChatPartyRepository.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Repository/ChatPartyRepository.php.url" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/packages/nelmio_cors.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/config/packages/nelmio_cors.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/generate_mercure_token.php" beforeDir="false" afterPath="$PROJECT_DIR$/generate_mercure_token.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Controller/ChatPartyController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/ChatPartyController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/migrations/Version20241105184341.php" beforeDir="false" afterPath="$PROJECT_DIR$/migrations/Version20241105184341.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Controller/PlayerController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/PlayerController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Controller/RiverController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/RiverController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Controller/SearchGameController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/SearchGameController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Entity/Player.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Entity/Player.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -205,19 +202,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "time",
-    "last_opened_file_path": "E:/Code/cercleProjet/eco_back/src/Entity",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;time2&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Code/cercleProjet/eco_back/src/Entity&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Code\cercleProjet\eco_back\src\Entity" />
@@ -245,6 +242,7 @@
       <updated>1730917963967</updated>
       <workItem from="1730917965382" duration="5585000" />
       <workItem from="1730968690934" duration="9830000" />
+      <workItem from="1731015895398" duration="5826000" />
     </task>
     <servers />
   </component>

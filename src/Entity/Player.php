@@ -29,6 +29,9 @@ class Player
     #[ORM\Column]
     private ?int $point = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $order_turn = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -66,6 +69,18 @@ class Player
     public function setPoint(int $point): static
     {
         $this->point = $point;
+
+        return $this;
+    }
+
+    public function getOrderTurn(): ?int
+    {
+        return $this->order_turn;
+    }
+
+    public function setOrderTurn(?int $order_turn): static
+    {
+        $this->order_turn = $order_turn;
 
         return $this;
     }

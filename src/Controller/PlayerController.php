@@ -28,6 +28,7 @@ final class PlayerController extends AbstractController
     #[Route('/by-party/{id_party}', name: 'app_player_by_party', methods: ['GET'])]
     public function byParty(PlayerRepository $playerRepository,$id_party): JsonResponse
     {
+
         $players = $playerRepository->findBy(['party' => $id_party]);
         $data = [];
 
@@ -36,11 +37,21 @@ final class PlayerController extends AbstractController
                 "id_user" => $player->getUser()->getId(),
                 "username" => explode('@', $player->getUser()->getEmail())[0],
                 "point" => $player->getPoint(),
+                "order_turn" => $player->getOrderTurn(),
             ];
 
         }
         return new JsonResponse($data, Response::HTTP_OK, []);
     }
+
+    #[Route('/my-turn/{id_party}', name: 'app_player_my_turn', methods: ['GET'])]
+    public function myTurn(Request $request,PlayerRepository $playerRepository, $id_party): JsonResponse
+    {
+        $playerTurn = $playerRepository->findOneBy(['party' => $id_party,'user' => $this->getUser()]);
+
+        return new JsonResponse(['turn' => $playerTurn->getOrderTurn()], Response::HTTP_OK);
+    }
+
     #[Route('/new', name: 'app_player_new', methods: ['POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
@@ -62,14 +73,14 @@ final class PlayerController extends AbstractController
         return new JsonResponse(['error' => 'Invalid data'], Response::HTTP_BAD_REQUEST);
     }
 
-    #[Route('/{id}', name: 'app_player_show', methods: ['GET'])]
-    public function show(Player $player, SerializerInterface $serializer): JsonResponse
-    {
-        $data = $serializer->serialize($player, 'json', ['groups' => 'player:read']);
-
-        return new JsonResponse($data, Response::HTTP_OK, [], true);
-    }
-
+    //#[Route('/{id}', name: 'app_player_show', methods: ['GET'])]
+    //public function show(Player $player, SerializerInterface $serializer): JsonResponse
+    //{
+    //    $data = $serializer->serialize($player, 'json', ['groups' => 'player:read']);
+//
+    //    return new JsonResponse($data, Response::HTTP_OK, [], true);
+    //}
+//
     #[Route('/{id}/edit', name: 'app_player_edit', methods: ['PUT'])]
     public function edit(Request $request, Player $player, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
