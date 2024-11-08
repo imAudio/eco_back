@@ -309,16 +309,16 @@ public function checkFriendshipStatus(FriendRepository $friendRepository): JsonR
     }
     
     $userId = $user->getId();
-    $friends = $friendRepository->findBy(['sent' => $userId]);
+    $friends = $friendRepository->findBy(['receiver' => $userId]);
     $response = [];
-
+    
     foreach ($friends as $friend) {
-        $receiver = $friend->getReceiver();
-        $receiverId = $receiver->getId();
-        $receiverEmail = $receiver->getEmail();
+        $sent = $friend->getSent();
+        $receiverId = $sent->getId();
+        $receiverEmail = $sent->getEmail();
 
         $response[] = [
-            'friend_id' => $receiverId,
+            'friend_id' => $friend->getId(),
             'friend_email' => $receiverEmail,
             'message' => $friend->getState() === 'accepted' ? "Vous êtes amis avec $receiverEmail" : "Demande en attente avec $receiverEmail",
             'state' => $friend->getState()  // Inclut l'état pour distinguer les amis et les demandes en attente
@@ -329,12 +329,12 @@ public function checkFriendshipStatus(FriendRepository $friendRepository): JsonR
 }
 // Dans FriendController.php
 
-#[Route('/{id}/accept', name: 'app_friend_accept', methods: ['POST'])]
+#[Route('/{id}/accept', name: 'app_friend_accept', methods: ['PUT'])]
 public function acceptFriend(int $id, FriendRepository $friendRepository, EntityManagerInterface $entityManager): JsonResponse
 {
     // Trouver la relation d'amitié par ID
     $friend = $friendRepository->find($id);
-
+   
     if (!$friend) {
         return new JsonResponse(['error' => 'Amitié non trouvée'], JsonResponse::HTTP_NOT_FOUND);
     }
@@ -348,5 +348,31 @@ public function acceptFriend(int $id, FriendRepository $friendRepository, Entity
 
     return new JsonResponse(['message' => 'Amitié acceptée'], JsonResponse::HTTP_OK);
 }
+
+// Dans FriendController.php
+#[Route('/search/q', name: 'search_user', methods: ['GET'])]
+public function search(Request $request, UserRepository $userRepository): JsonResponse
+{
+    $query = $request->query->get('query', '');
+
+    // Vérifier que la requête a au moins 3 lettres pour la recherche
+ 
+
+    $users = $userRepository->createQueryBuilder('u')
+        ->where('u.email LIKE :query')
+        ->setParameter('query', $query . '%') // Utilise les trois premières lettres de `query`
+        ->getQuery()
+        ->getResult();
+
+    $data = array_map(function ($user) {
+        return [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+        ];
+    }, $users);
+
+    return new JsonResponse($data, JsonResponse::HTTP_OK);
+}
+
 
 }
