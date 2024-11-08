@@ -31,4 +31,12 @@ class RegistrationController extends AbstractController
 
         return new JsonResponse(['message' => 'User registered successfully'], JsonResponse::HTTP_CREATED);
     }
+
+    #[Route('/logout', name: 'api_logout', methods: ['POST'])]
+public function logout(): JsonResponse
+{
+    // Ce message informe le front-end que la déconnexion a été traitée
+    return new JsonResponse(['message' => 'Déconnexion réussie'], JsonResponse::HTTP_OK);
+}
+
 }
