@@ -6,11 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="de5f4593-4be4-4f00-bb8e-3d3370dc53db" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/migrations/Version20241105184341.php" beforeDir="false" afterPath="$PROJECT_DIR$/migrations/Version20241105184341.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Controller/PlayerController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/PlayerController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Controller/RiverController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/RiverController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Controller/SearchGameController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/SearchGameController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Entity/Player.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Entity/Player.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -205,8 +201,8 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;time2&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/Code/cercleProjet/eco_back/src/Entity&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/laragon/www/eco_back&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -227,8 +223,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PS-242.23339.16" />
-        <option value="bundled-php-predefined-a98d8de5180a-90914f2295cb-com.jetbrains.php.sharedIndexes-PS-242.23339.16" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PS-242.23726.107" />
+        <option value="bundled-php-predefined-a98d8de5180a-90914f2295cb-com.jetbrains.php.sharedIndexes-PS-242.23726.107" />
       </set>
     </attachedChunks>
   </component>
@@ -243,6 +239,8 @@
       <workItem from="1730917965382" duration="5585000" />
       <workItem from="1730968690934" duration="9830000" />
       <workItem from="1731015895398" duration="5826000" />
+      <workItem from="1731054313547" duration="931000" />
+      <workItem from="1731056336409" duration="3245000" />
     </task>
     <servers />
   </component>

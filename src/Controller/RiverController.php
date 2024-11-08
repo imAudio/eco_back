@@ -8,6 +8,7 @@ use App\Form\RiverType;
 use App\Repository\CardRepository;
 use App\Repository\HandRepository;
 use App\Repository\PartyRepository;
+use App\Repository\PlayerRepository;
 use App\Repository\RiverRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -73,7 +74,8 @@ final class RiverController extends AbstractController
         EntityManagerInterface $entityManager,
         HandRepository $handRepository,
         HubInterface $hub,
-        PartyRepository $partyRepository
+        PartyRepository $partyRepository,
+        PlayerRepository $playerRepository,
     ): JsonResponse {
         // Décoder le contenu JSON de la requête
         $data = json_decode($request->getContent(), true);
@@ -91,6 +93,10 @@ final class RiverController extends AbstractController
 
         $party = $partyRepository->find($idParty);
         $party->setTurn($party->getTurn()+1);
+
+
+
+
         $entityManager->persist($party);
         $entityManager->flush();
 
@@ -156,6 +162,133 @@ final class RiverController extends AbstractController
             json_encode(['message' => 'refresh-river','idParty' => $idParty , 'river' => $data])
         );
         $hub->publish($update);
+
+        if ($party->getTurn() >= 19) {
+            $players = $playerRepository->findBy(['party' => $idParty]);
+            $riverCards = $riverRepository->findBy(['party' => $idParty]);
+            $sortedByType = [];
+
+            // Règles des multiplicateurs basées sur le nombre de cartes identiques
+            $multipliers = [
+                2 => 3,  // Deux cartes identiques ou complémentaires
+                3 => 6,  // Trois cartes identiques d'une même famille + deux autres de familles différentes
+                4 => 10, // Trois cartes d'une même famille et deux d'une autre famille
+                5 => 12, // Quatre cartes d'une même famille + une d'une autre
+                6 => 15  // Cinq cartes d'une même famille
+            ];
+
+            // Trier les cartes de la rivière par type et compter les cartes
+            foreach ($riverCards as $river) {
+                $card = $river->getCard();
+                if ($card && $card->getType()) {
+                    $type = trim($card->getType());
+
+                    if (!isset($sortedByType['river'][$type])) {
+                        $sortedByType['river'][$type] = [
+                            'cards' => [],
+                            'total_value' => 0,
+                            'count' => 0
+                        ];
+                    }
+
+                    $sortedByType['river'][$type]['cards'][] = $river;
+                    $sortedByType['river'][$type]['total_value'] += $card->getValue();
+                    $sortedByType['river'][$type]['count']++;
+                }
+            }
+
+            // Parcourir les joueurs pour inclure leurs cartes de main triées par type
+            foreach ($players as $player) {
+                $handCards = $handRepository->findBy(['party' => $idParty, 'user' => $player->getUser()]);
+                $playerName = $player->getUser()->getEmail();
+
+                if (!isset($sortedByType[$playerName])) {
+                    $sortedByType[$playerName] = [
+                        'total_hand_value' => 0,
+                        'most_frequent_type' => null,
+                        'highest_count' => 0,
+                        'multiplied_points' => 0  // Initialiser les points avec multiplicateur
+                    ];
+                }
+
+                foreach ($handCards as $handCard) {
+                    $card = $handCard->getCard();
+                    if ($card && $card->getType()) {
+                        $type = trim($card->getType());
+
+                        if (!isset($sortedByType[$playerName][$type])) {
+                            $sortedByType[$playerName][$type] = [
+                                'cards' => [],
+                                'total_value' => 0,
+                                'count' => 0
+                            ];
+                        }
+
+                        $sortedByType[$playerName][$type]['cards'][] = $handCard;
+                        $sortedByType[$playerName][$type]['total_value'] += $card->getValue();
+                        $sortedByType[$playerName][$type]['count']++;
+                        $sortedByType[$playerName]['total_hand_value'] += $card->getValue();
+                    }
+                }
+            }
+
+            foreach ($players as $player) {
+                $playerName = $player->getUser()->getEmail();
+
+                foreach ($sortedByType['river'] as $type => $riverData) {
+                    if (!isset($sortedByType[$playerName][$type])) {
+                        $sortedByType[$playerName][$type] = [
+                            'cards' => [],
+                            'total_value' => 0,
+                            'count' => 0
+                        ];
+                    }
+
+                    $sortedByType[$playerName][$type]['count'] += $riverData['count'];
+                    $sortedByType[$playerName][$type]['total_value'] += $riverData['total_value'];
+                    $sortedByType[$playerName][$type]['cards'] = array_merge(
+                        $sortedByType[$playerName][$type]['cards'],
+                        $riverData['cards']
+                    );
+                }
+            }
+
+            // Calculer les points avec multiplicateurs pour chaque joueur
+            foreach ($players as $player) {
+                $playerName = $player->getUser()->getEmail();
+                $mostFrequentType = null;
+                $highestCount = 0;
+                $multipliedPoints = 0;
+
+                foreach ($sortedByType[$playerName] as $type => $data) {
+                    if (isset($data['count'])) {
+                        // Appliquer le multiplicateur de points selon le nombre de cartes
+                        if (isset($multipliers[$data['count']])) {
+                            $multipliedPoints += $multipliers[$data['count']];
+                        }
+
+                        if ($data['count'] > $highestCount) {
+                            $highestCount = $data['count'];
+                            $mostFrequentType = $type;
+                        }
+                    }
+                }
+
+                // Enregistrer le type de carte le plus fréquent et les points avec multiplicateur pour le joueur
+                $sortedByType[$playerName]['most_frequent_type'] = $mostFrequentType;
+                $sortedByType[$playerName]['highest_count'] = $highestCount;
+                $sortedByType[$playerName]['multiplied_points'] = $multipliedPoints;
+            }
+
+
+
+            $update = new Update(
+                "game_end_$idParty",
+                json_encode(['message' => 'refresh-river','idParty' => $idParty , 'sortedByType' => $sortedByType])
+            );
+            $hub->publish($update);
+
+        }
 
         return new JsonResponse(['status' => 'Cards switched successfully'], Response::HTTP_OK);
     }
