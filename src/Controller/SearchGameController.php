@@ -67,17 +67,18 @@ final class SearchGameController extends AbstractController
                 $cards = $cardRepository->findAll();
 
                 shuffle($cards);
-
-                foreach ($players as $player) {
+                for ($i = 0; $i < count($players); $i++) {
                     $play = new Player();
-
+                    $player = $players[$i];
                     $play->setUser($player->getUser());
                     $play->setParty($party);
                     $play->setPoint(0);
+                    $play->setOrderTurn($i);
+
                     $entityManager->persist($play);
                     $entityManager->flush();
 
-                    for ($i = 0; $i < 2; $i++) {
+                    for ($y = 0; $y < 2; $y++) {
                         $hand = new Hand();
                         $hand->setUser($player->getUser());
                         $hand->setCard(array_shift($cards));

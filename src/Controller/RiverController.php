@@ -7,11 +7,14 @@ use App\Entity\Party;
 use App\Form\RiverType;
 use App\Repository\CardRepository;
 use App\Repository\HandRepository;
+use App\Repository\PartyRepository;
 use App\Repository\RiverRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -68,7 +71,9 @@ final class RiverController extends AbstractController
         RiverRepository $riverRepository,
         CardRepository $cardRepository,
         EntityManagerInterface $entityManager,
-        HandRepository $handRepository
+        HandRepository $handRepository,
+        HubInterface $hub,
+        PartyRepository $partyRepository
     ): JsonResponse {
         // Décoder le contenu JSON de la requête
         $data = json_decode($request->getContent(), true);
@@ -83,6 +88,11 @@ final class RiverController extends AbstractController
         $idCardHand = $data['id_card_hand'];
         $idParty = $data['id_party'];
 
+
+        $party = $partyRepository->find($idParty);
+        $party->setTurn($party->getTurn()+1);
+        $entityManager->persist($party);
+        $entityManager->flush();
 
 
         // Rechercher la carte dans la rivière en fonction des paramètres reçus
@@ -127,6 +137,25 @@ final class RiverController extends AbstractController
         // Mettre à jour la carte de la main avec la carte de la rivière
         $handCard->setCard($cardRiver);
         $entityManager->flush();
+
+        $cards = $riverRepository->findBy(['party' => $idParty]);
+        $data = [];
+        foreach ($cards as $card) {
+            $data[] = [
+                "id_card" => $card->getCard()->getId(),
+                "image" => $card->getCard()->getImage(),
+                "name" => $card->getCard()->getName(),
+                "value" => $card->getCard()->getValue(),
+                "capacity" => $card->getCard()->getCapacity(),
+                "type" => $card->getCard()->getType(),
+            ];
+        }
+
+        $update = new Update(
+            "game_switch_card_river_$idParty",
+            json_encode(['message' => 'refresh-river','idParty' => $idParty , 'river' => $data])
+        );
+        $hub->publish($update);
 
         return new JsonResponse(['status' => 'Cards switched successfully'], Response::HTTP_OK);
     }
