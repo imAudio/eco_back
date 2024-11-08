@@ -53,17 +53,21 @@ public function new(Request $request, EntityManagerInterface $entityManager, Fri
         return new JsonResponse(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
     }
 
-    // Vérifiez que `sent_id`, `receiver_id`, et `state` sont présents
-    if (!isset($data['sent_id'], $data['receiver_id'])) {
+    // Vérifiez que `receiver_id` est présent
+    if (!isset($data['receiver_id'])) {
         return new JsonResponse(['error' => 'Missing required fields'], Response::HTTP_BAD_REQUEST);
     }
 
-    // Récupérer les utilisateurs `sent` et `receiver`
-    $sentUser = $userRepository->find($data['sent_id']);
-    $receiverUser = $userRepository->find($data['receiver_id']);
+    // Récupérer l'utilisateur connecté via le token
+    $sentUser = $this->getUser();
+    if (!$sentUser) {
+        return new JsonResponse(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+    }
 
-    if (!$sentUser || !$receiverUser) {
-        return new JsonResponse(['error' => 'User not found'], Response::HTTP_BAD_REQUEST);
+    // Récupérer l'utilisateur `receiver` par ID
+    $receiverUser = $userRepository->find($data['receiver_id']);
+    if (!$receiverUser) {
+        return new JsonResponse(['error' => 'Receiver user not found'], Response::HTTP_BAD_REQUEST);
     }
 
     // Rechercher une relation existante entre les utilisateurs
@@ -73,43 +77,27 @@ public function new(Request $request, EntityManagerInterface $entityManager, Fri
     ]);
 
     if ($existingFriend) {
-        // Si la relation existe et est en "pending", passez-la à "accepted"
         if ($existingFriend->getState() === 'pending') {
             $existingFriend->setState('accepted');
             $entityManager->flush();
             return new JsonResponse(['message' => 'Amitié acceptée'], Response::HTTP_OK);
         }
 
-        // Si la relation est déjà acceptée, retournez un message informatif
         return new JsonResponse(['message' => 'Vous êtes déjà amis avec cet utilisateur'], Response::HTTP_OK);
     }
 
-    // Sinon, créez une nouvelle demande d'ami avec `state` défini à "pending"
+    // Créer une nouvelle relation d'amitié
     $friend = new Friend();
     $friend->setSent($sentUser);
     $friend->setReceiver($receiverUser);
     $friend->setState('pending');
 
-    // Persister l'entité
     $entityManager->persist($friend);
     $entityManager->flush();
 
-    // Préparer la réponse JSON
-    $responseData = [
-        "id" => $friend->getId(),
-        "sent_user" => [
-            "id" => $friend->getSent()->getId(),
-            "email" => $friend->getSent()->getEmail(),
-        ],
-        "receiver_user" => [
-            "id" => $friend->getReceiver()->getId(),
-            "email" => $friend->getReceiver()->getEmail(),
-        ],
-        "state" => $friend->getState(),
-    ];
-
-    return new JsonResponse($responseData, Response::HTTP_CREATED);
+    return new JsonResponse(['message' => 'Demande d\'ami envoyée avec succès'], Response::HTTP_CREATED);
 }
+
 
 
     #[Route('/{id}', name: 'app_friend_show', methods: ['GET'])]
@@ -353,14 +341,17 @@ public function acceptFriend(int $id, FriendRepository $friendRepository, Entity
 #[Route('/search/q', name: 'search_user', methods: ['GET'])]
 public function search(Request $request, UserRepository $userRepository): JsonResponse
 {
-    $query = $request->query->get('query', '');
+    $query = $request->query->get('q', ''); // Assurez-vous que le paramètre est bien "q" et non "query"
 
-    // Vérifier que la requête a au moins 3 lettres pour la recherche
- 
+    // Vérifier que le query contient au moins une lettre
+    if (strlen($query) < 1) {
+        return new JsonResponse(['message' => 'Veuillez entrer au moins une lettre pour effectuer une recherche.'], JsonResponse::HTTP_BAD_REQUEST);
+    }
 
     $users = $userRepository->createQueryBuilder('u')
         ->where('u.email LIKE :query')
-        ->setParameter('query', $query . '%') // Utilise les trois premières lettres de `query`
+        ->setParameter('query', $query . '%') // Restrictif pour matcher seulement les débuts d'emails
+        ->setMaxResults(10) // Optionnel : limiter le nombre de résultats
         ->getQuery()
         ->getResult();
 
@@ -373,6 +364,9 @@ public function search(Request $request, UserRepository $userRepository): JsonRe
 
     return new JsonResponse($data, JsonResponse::HTTP_OK);
 }
+
+
+
 
 
 }
